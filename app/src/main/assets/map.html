@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html style = "width: 100%; height: 100%">
+<head>
+    <meta charset = "utf-8">
+    <title>Map</title>
+
+    <script type = "text/javascript" src = "http://maps.google.com/maps/api/js?sensor=false">
+    </script>
+
+	<SCRIPT SRC = "http://google-maps-utility-library-v3.googlecode.com/svn/tags/markerwithlabel/1.0.1/src/markerwithlabel.js">
+	</SCRIPT>
+
+    <script type = "text/javascript">
+
+var globalMap;
+
+//This JavaScript function is called from the onPageFinished method of class MapWebViewClient.
+
+function mapFunction(latitude, longitude, zoom) {
+	var division = document.getElementById('map');
+	if (division == null) {
+		alert("map division not found");
+		return;
+	}
+
+	var position = new google.maps.LatLng(latitude, longitude);
+
+	var options = {
+		center: position,
+		mapTypeControlOptions: {style: google.maps.MapTypeControlStyle.DROPDOWN_MENU},
+		mapTypeId: google.maps.MapTypeId.HYBRID,
+		scaleControl: true,
+		tilt: 0,
+		zoom: zoom
+	};
+
+	globalMap = new google.maps.Map(division, options);
+}
+
+var globalInfowindow = null;	//Only 1 Infowindow at a time.
+
+function markerFunction(address) {
+    globalAddress = address;
+    var geocodeRequest = {"address": address};
+    var geocoder = new google.maps.Geocoder();
+    geocoder.geocode(geocodeRequest, onFoundLatLng);
+}
+
+function onFoundLatLng(results, status) {
+    if (status == google.maps.GeocoderStatus.OK) {
+		var latLng = results[0].geometry.location;
+		//Remove first comma and everything to the right of it.
+		var address = results[0].formatted_address.replace(/,.*/, "");
+
+		var style =
+                  'color: white; '
+                + 'text-shadow: '
+                + '-1px -1px 0px black,'
+                + ' 1px -1px 0px black,'
+                + '-1px  1px 0px black,'
+                + ' 1px  1px 0px black;';
+
+        var labelContent = '<SPAN STYLE = "' + style + '">' + address + '</SPAN>';
+
+        options = {
+                position: latLng,   //We created this variable earlier.
+                map: globalMap,     //We created this variable earlier.
+                icon: 'http://maps.google.com/mapfiles/ms/micons/red-dot.png',
+                labelContent: labelContent,
+                //Center the label above the marker.
+                labelAnchor: new google.maps.Point(3 * globalAddress.length, 42),
+                labelClass: 'labels', //the CSS class for the label
+                labelStyle: {opacity: 0.75}
+        };
+        var marker = new MarkerWithLabel(options);
+
+        google.maps.event.addListener(marker, 'click', function() {
+    		options = {
+				content: results[0].formatted_address + "<BR>" + results[0].geometry.location + "<BR>",
+				position: latLng
+			};
+
+			if (globalInfowindow != null) {
+			    globalInfowindow.close();
+			}
+			globalInfowindow = new google.maps.InfoWindow(options);
+			globalInfowindow.open(globalMap);
+  		});
+    }
+}
+</script>
+</head>
+
+<body style = "width: 100%; height: 100%; margin: 0px; padding: 0px;">
+<div id = "map" style = "width: 100%; height: 100%;">
+</div>
+</body>
+</html>
